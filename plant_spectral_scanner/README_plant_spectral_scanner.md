@@ -60,8 +60,7 @@ bulbs:
 **sensor_ports.yaml:**
 ```yaml
 sensor:
-  port: /dev/ttyUSB0
-  baud_rate: 115200
+  port_name: /dev/cu.portnumber 
 ```
 
 ### 2. Run Scanner
