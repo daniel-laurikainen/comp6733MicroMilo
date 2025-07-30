@@ -103,9 +103,10 @@ These techniques provide a foundation for future integration of machine learning
 
 ```bash
 micro-milo/
-├── firmware/             # Arduino code
-├── scripts/              # Python data processing + ML scripts
-├── data/                 # Collected CSV data
-├── hardware/             # Schematics, wiring diagrams
-├── docs/                 # Project report, proposal, references
-└── README.md             # This file
+├── firmware/                 # Arduino code
+├── scripts/                  # Python data processing + ML scripts
+├── data/                     # Collected CSV data
+├── hardware/                 # Schematics, wiring diagrams
+├── docs/                     # Project report, proposal, references
+├── plant_spectral_scanner/  # Bulb control logic and spectral data interface
+├── README.md                 # Main project overview

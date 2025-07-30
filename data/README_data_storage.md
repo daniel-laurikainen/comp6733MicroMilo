@@ -7,8 +7,13 @@ This document describes how the spectral data collected from the AS7265x sensor 
    - Each row represents one timestamped reading of all spectral channels.
 
 2. File Structure:
-   - The first row must be the header, naming each column.
-   - Subsequent rows contain sensor readings.
+- The first row must be the **CSV header**, which includes:
+  - A timestamp
+  - (Optional) A description of the object being scanned (for scan mode only)
+  - Light `colour` and `position`
+  - The `sensor` identifier
+  - 18 channel values labeled as `channel_1` through `channel_18`
+- Each subsequent row contains the recorded values for a single sensor reading.
 
 3. Recommended CSV Header:
    timestamp,410nm,435nm,460nm,485nm,510nm,535nm,560nm,585nm,610nm,645nm,680nm,705nm,730nm,760nm,810nm,860nm,900nm,940nm

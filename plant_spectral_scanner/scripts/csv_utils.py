@@ -14,14 +14,17 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
         colour: Light colour used (e.g. red, green, blue, white)
         position: Light source position (e.g. close, middle, far)
     """
+    # Get the base directory: parent of plant_spectral_scanner/
+    base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     folder_name = "scans" if mode == "scan" else "baseline"
-    base_dir = os.path.join("data", folder_name)
-    os.makedirs(base_dir, exist_ok=True)
+    data_dir = os.path.join(base_project_dir, "data", folder_name)
+    os.makedirs(data_dir, exist_ok=True)
 
     timestamp_now = datetime.now()
     timestamp_str = timestamp_now.strftime('%Y%m%d_%H%M%S')
     filename = f"{'adjusted_' if adjusted else ''}{mode}_{timestamp_str}.csv"
-    filepath = os.path.join(base_dir, filename)
+    filepath = os.path.join(data_dir, filename)
 
     with open(filepath, mode='w', newline='') as csvfile:
         writer = csv.writer(csvfile)
