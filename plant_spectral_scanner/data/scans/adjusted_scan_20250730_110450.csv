@@ -1,0 +1,4 @@
+timestamp,description,sensor,channel_1,channel_2,channel_3,channel_4,channel_5,channel_6,channel_7,channel_8,channel_9,channel_10,channel_11,channel_12,channel_13,channel_14,channel_15,channel_16,channel_17,channel_18
+2025-07-30 11:04:50,zero,white_close_sensor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+2025-07-30 11:04:50,zero,red_middle_sensor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-1.0754,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+2025-07-30 11:04:50,zero,black_far_sensor,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.38159999999999883,0.0,0.0,-0.8016,0.0,0.0,0.0,0.0,0.0
