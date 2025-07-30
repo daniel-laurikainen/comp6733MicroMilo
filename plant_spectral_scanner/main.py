@@ -9,13 +9,17 @@ Author: Daniel L.
 
 import time
 from utils.sensor_controller import SensorController
+from utils.bulb_controller import BulbController
+
 from scripts.prompt_mode import prompt_mode
 from scripts.csv_utils import save_to_csv
 from scripts.baseline_utils import load_latest_baseline, subtract_baseline
 
 def main():
-    controller = SensorController()
-    controller.connect_sensors()
+    sensor_controller = SensorController()
+    sensor_controller.connect_sensors()
+
+    bulb_controller = BulbController()
 
     print("[READY] Sensors connected. Waiting for instructions...")
 
@@ -25,11 +29,12 @@ def main():
         "Blue": "#0000FF",
         "White": "#FFFFFF"
     }
-    positions = ["close", "middle", "far"]
+    bulb_positions = ["close", "middle", "far"]
 
     try:
         while True:
             mode = prompt_mode()
+            bulb_controller.turn_off_all_lights()
 
             if mode == "quit":
                 print("[EXITING] Ending session.")
@@ -50,14 +55,14 @@ def main():
                     continue
 
             for colour, hex_code in colours.items():
-                for position in positions:
+                for position in bulb_positions:
                     print(f"[{mode.upper()}] Measuring for {colour} light at {position} position...")
-                    controller.set_light(hex_code, position)
+                    bulb_controller.turn_on_light(position, hex_code)
                     time.sleep(2)  # allow light to stabilize
 
-                    data = controller.read_all_sensors()
+                    data = sensor_controller.read_all_sensors()
 
-                    controller.turn_off_light()
+                    bulb_controller.turn_off_light()
                     time.sleep(0.5)
 
                     if mode == "baseline":
@@ -67,7 +72,8 @@ def main():
                         save_to_csv(adjusted, mode, description, colour, position, adjusted=True)
 
     finally:
-        controller.disconnect_sensors()
+        sensor_controller.disconnect_sensors()
+        bulb_controller.turn_off_all_lights()
         print("[DISCONNECTED] Sensors safely disconnected.")
 
 

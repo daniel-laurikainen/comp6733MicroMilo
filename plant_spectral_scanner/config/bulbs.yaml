@@ -1,0 +1,9 @@
+bulbs:
+  - name: bulb_close
+    ip: 192.168.119.60
+
+  - name: bulb_middle
+    ip: 192.168.119.238
+
+  - name: bulb_far
+    ip: 192.168.119.176 # this needs to be edited it is place holder check last bulbs

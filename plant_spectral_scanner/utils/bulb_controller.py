@@ -1,59 +1,62 @@
 import asyncio
-from pywizlight import wizlight, PilotBuilder, discovery
+import yaml
+from pywizlight import wizlight, PilotBuilder
+from typing import Dict
 
-
-# B8:A8:25:FE:9A:55
- 
 class BulbController:
-    def __init__(self, broadcast_ip="192.168.1.255"):
-        self.broadcast_ip = broadcast_ip
-        self.bulbs = []
+    def __init__(self, config_path="config/bulbs.yaml"):
+        self.bulbs = {}  # type: Dict[str, wizlight]
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self._load_bulbs(config_path)
 
-    async def discover_bulbs(self):
-        self.bulbs = await discovery.discover_lights(broadcast_space=self.broadcast_ip)
-        print(f"Discovered {len(self.bulbs)} bulbs.")
-        for i, bulb in enumerate(self.bulbs):
-            print(f"Bulb {i}: IP {bulb.ip}")
+    def _load_bulbs(self, config_path):
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        for bulb_info in config.get("bulbs", []):
+            name = bulb_info.get("name")
+            ip = bulb_info.get("ip")
+            if name and ip:
+                self.bulbs[name] = wizlight(ip)
+            else:
+                print(f"[WARNING] Bulb entry missing name or ip: {bulb_info}")
 
-    async def turn_on_all(self, brightness=255):
-        if not self.bulbs:
-            await self.discover_bulbs()
-        await asyncio.gather(*[bulb.turn_on(PilotBuilder(brightness=brightness)) for bulb in self.bulbs])
-        print("All bulbs turned ON")
+    def turn_on_light(self, position: str, hex_color: str):
+        """
+        Turn on the bulb at 'position' with the given hex_color (e.g. '#FF0000').
+        This method runs the asyncio call internally.
+        """
+        position_key = f"bulb_{position}"
+        bulb = self.bulbs.get(position_key)
+        if not bulb:
+            print(f"[ERROR] No bulb found for position '{position}'")
+            return
+        
+        rgb = self._hex_to_rgb(hex_color)
+        self.loop.run_until_complete(self._async_turn_on(bulb, rgb))
 
-    async def turn_off_all(self):
-        if not self.bulbs:
-            await self.discover_bulbs()
-        await asyncio.gather(*[bulb.turn_off() for bulb in self.bulbs])
-        print("All bulbs turned OFF")
+    def turn_off_all_lights(self):
+        """
+        Turn off all bulbs asynchronously.
+        """
+        tasks = [self._async_turn_off(bulb) for bulb in self.bulbs.values()]
+        self.loop.run_until_complete(asyncio.gather(*tasks))
 
-    async def set_color(self, rgb_tuple):
-        if not self.bulbs:
-            await self.discover_bulbs()
-        await asyncio.gather(*[bulb.turn_on(PilotBuilder(rgb=rgb_tuple)) for bulb in self.bulbs])
-        print(f"All bulbs set to color {rgb_tuple}")
+    async def _async_turn_on(self, bulb, rgb):
+        pilot = PilotBuilder(rgb=rgb, brightness=255)
+        await bulb.turn_on(pilot)
 
+    async def _async_turn_off(self, bulb):
+        await bulb.turn_off()
 
-async def test_bulbs():
-    controller = BulbController()
-
-    # Discover bulbs on your network
-    await controller.discover_bulbs()
-
-    # Turn all bulbs on at full brightness
-    await controller.turn_on_all(brightness=255)
-
-    # Wait 3 seconds so you can see bulbs ON
-    await asyncio.sleep(3)
-
-    # Change color to soft blue (example RGB)
-    await controller.set_color((0, 0, 255))
-
-    # Wait 3 seconds so you can see the color change
-    await asyncio.sleep(3)
-
-    # Turn all bulbs off
-    await controller.turn_off_all()
-
-if __name__ == "__main__":
-    asyncio.run(test_bulbs())
+    @staticmethod
+    def _hex_to_rgb(hex_color: str):
+        """Convert hex color string (#RRGGBB) to an RGB tuple."""
+        hex_color = hex_color.lstrip('#')
+        if len(hex_color) != 6:
+            raise ValueError(f"Invalid hex color: {hex_color}")
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        return (r, g, b)
