@@ -2,6 +2,8 @@ import os
 import csv
 from datetime import datetime
 
+
+
 def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = False,
                 colour: str = "", position: str = "", filename: str = "") -> str:
     """
@@ -19,6 +21,9 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
     Returns:
         The full filepath where the data was saved
     """
+
+    wavelengths = [410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 890, 900, 940]
+
     # Get the base directory: parent of plant_spectral_scanner/
     base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -43,7 +48,7 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
             if mode == "scan":
                 header.append("description")
             header.extend(["bulb_colour", "bulb_position", "sensor_position"])
-            header.extend([f"channel_{i+1}" for i in range(len(next(iter(data.values()))))])
+            header.extend([f"channel_{i+1}_{wl}" for i, wl in enumerate(wavelengths)])
             writer.writerow(header)
 
         timestamp_now = datetime.now()

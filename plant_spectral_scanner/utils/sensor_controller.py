@@ -12,6 +12,7 @@ import yaml
 import time
 from typing import Dict
 
+wavelengths = [410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 890, 900, 940]
 
 class SensorController:
     def __init__(self, config_path: str = 'config/sensor_ports.yaml'):
@@ -64,7 +65,7 @@ class SensorController:
             line = ser.readline().decode('utf-8').strip()
             # Example: Parse comma-separated values like "123,456,..."
             values = list(map(float, line.split(',')))
-            return {f"channel_{i+1}": val for i, val in enumerate(values)}
+            return {f"channel_{i+1}_{wavelengths[i]}": val for i, val in enumerate(values)}
         except Exception as e:
             print(f"[ERROR] Failed to read from {name}: {e}")
             return {}

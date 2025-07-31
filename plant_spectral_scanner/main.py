@@ -45,6 +45,14 @@ def main():
                 print("[EXITING] Ending session.")
                 break
 
+            baseline_data = None
+            current_filename = None
+
+            if mode == "scan":
+                baseline_data = load_latest_baseline()
+                if baseline_data is None:
+                    continue
+            
             description = ""
             if mode == "scan":
                 description = input("Enter a description for the object being scanned: ").strip()
@@ -52,14 +60,6 @@ def main():
             print(f"[INFO] Starting {mode} measurements...")
             time.sleep(MODE_START_DELAY)
 
-            baseline_data = None
-            current_filename = None
-
-            if mode == "scan":
-                baseline_data = load_latest_baseline()
-                if baseline_data is None:
-                    print("[ERROR] No baseline data available. Skipping scan.")
-                    continue
 
             for colour, hex_code in colours.items():
                 print(f"[{mode.upper()}] Measuring for {colour} light")
