@@ -2,9 +2,10 @@ import os
 import csv
 from datetime import datetime
 
-def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = False, colour: str = "", position: str = "") -> None:
+def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = False,
+                colour: str = "", position: str = "", filename: str = "") -> str:
     """
-    Save sensor data to a CSV file
+    Save sensor data to a CSV file. If filename is provided, appends to existing file.
 
     Args:
         data: Dictionary of sensor -> channel -> value
@@ -13,6 +14,10 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
         adjusted: Whether the scan data is baseline-adjusted
         colour: Light colour used (e.g. red, green, blue, white)
         position: Light source position (e.g. close, middle, far)
+        filename: Optional filename to write to (for grouping multiple scan entries)
+
+    Returns:
+        The full filepath where the data was saved
     """
     # Get the base directory: parent of plant_spectral_scanner/
     base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,22 +26,27 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
     data_dir = os.path.join(base_project_dir, "data", folder_name)
     os.makedirs(data_dir, exist_ok=True)
 
-    timestamp_now = datetime.now()
-    timestamp_str = timestamp_now.strftime('%Y%m%d_%H%M%S')
-    filename = f"{'adjusted_' if adjusted else ''}{mode}_{timestamp_str}.csv"
-    filepath = os.path.join(data_dir, filename)
+    # Generate filename only once per full scan session
+    if not filename:
+        timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{description + '_' if adjusted else ''}{mode}_{timestamp_str}.csv"
 
-    with open(filepath, mode='w', newline='') as csvfile:
+    filepath = os.path.join(data_dir, filename)
+    file_exists = os.path.exists(filepath)
+
+    with open(filepath, mode='a', newline='') as csvfile:
         writer = csv.writer(csvfile)
 
-        # Compose header
-        header = ["timestamp"]
-        if mode == "scan":
-            header.append("description")
-        header.extend(["colour", "position", "sensor"])
-        header.extend([f"channel_{i+1}" for i in range(len(next(iter(data.values()))))])
-        writer.writerow(header)
+        # Write header only once
+        if not file_exists:
+            header = ["timestamp"]
+            if mode == "scan":
+                header.append("description")
+            header.extend(["bulb_colour", "bulb_position", "sensor_position"])
+            header.extend([f"channel_{i+1}" for i in range(len(next(iter(data.values()))))])
+            writer.writerow(header)
 
+        timestamp_now = datetime.now()
         # Write each sensor's row
         for sensor, channels in data.items():
             row = [timestamp_now.strftime('%Y-%m-%d %H:%M:%S')]
@@ -46,4 +56,4 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
             row.extend(channels.values())
             writer.writerow(row)
 
-    print(f"[SAVED] {mode.capitalize()} data saved to {filepath}")
+    return filename

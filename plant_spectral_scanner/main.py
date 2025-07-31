@@ -15,6 +15,11 @@ from scripts.prompt_mode import prompt_mode
 from scripts.csv_utils import save_to_csv
 from scripts.baseline_utils import load_latest_baseline, subtract_baseline
 
+# === Global timing variables ===
+BULB_STABILIZE_TIME = 3.0     # seconds to wait after turning bulb on to stabilize
+BULB_OFF_DELAY = 0.5          # seconds to wait after turning bulb off before next step
+MODE_START_DELAY = 1.0        # seconds to wait after starting mode before measurement
+
 def main():
     sensor_controller = SensorController()
     sensor_controller.connect_sensors()
@@ -29,7 +34,7 @@ def main():
         "Blue": "#0000FF",
         "White": "#FFFFFF"
     }
-    bulb_positions = ["close", "middle", "far"]
+    bulb_positions = ["close_bulb", "middle_bulb", "far_bulb"]
 
     try:
         while True:
@@ -45,9 +50,11 @@ def main():
                 description = input("Enter a description for the object being scanned: ").strip()
 
             print(f"[INFO] Starting {mode} measurements...")
-            time.sleep(1)
+            time.sleep(MODE_START_DELAY)
 
             baseline_data = None
+            current_filename = None
+
             if mode == "scan":
                 baseline_data = load_latest_baseline()
                 if baseline_data is None:
@@ -55,22 +62,37 @@ def main():
                     continue
 
             for colour, hex_code in colours.items():
+                print(f"[{mode.upper()}] Measuring for {colour} light")
                 for position in bulb_positions:
-                    print(f"[{mode.upper()}] Measuring for {colour} light at {position} position...")
                     bulb_controller.turn_on_light(position, hex_code)
-                    time.sleep(2)  # allow light to stabilize
+                    time.sleep(BULB_STABILIZE_TIME)  # allow light to stabilize
 
                     data = sensor_controller.read_all_sensors()
 
-                    bulb_controller.turn_off_light()
-                    time.sleep(0.5)
+                    bulb_controller.turn_off_all_lights()
+                    time.sleep(BULB_OFF_DELAY)
 
                     if mode == "baseline":
-                        save_to_csv(data, mode, colour=colour, position=position)
+                        current_filename = save_to_csv(
+                            data=data,
+                            mode=mode,
+                            colour=colour,
+                            position=position,
+                            filename=current_filename
+                        )
                     elif mode == "scan":
-                        adjusted = subtract_baseline(data, baseline_data, colour, position)
-                        save_to_csv(adjusted, mode, description, colour, position, adjusted=True)
-
+                        data_baselined = subtract_baseline(data, baseline_data, colour, position)
+                        current_filename = save_to_csv(
+                            data=data_baselined,
+                            mode=mode,
+                            description=description,
+                            colour=colour,
+                            position=position,
+                            adjusted=True,
+                            filename=current_filename
+                        )
+            if current_filename:
+                print(f"[COMPLETE] {mode.capitalize()} data successfully saved to '{current_filename}'")
     finally:
         sensor_controller.disconnect_sensors()
         bulb_controller.turn_off_all_lights()

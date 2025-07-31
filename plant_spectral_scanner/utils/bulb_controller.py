@@ -27,7 +27,7 @@ class BulbController:
         Turn on the bulb at 'position' with the given hex_color (e.g. '#FF0000').
         This method runs the asyncio call internally.
         """
-        position_key = f"bulb_{position}"
+        position_key = f"{position}"
         bulb = self.bulbs.get(position_key)
         if not bulb:
             print(f"[ERROR] No bulb found for position '{position}'")

@@ -1,5 +1,6 @@
 from glob import glob
 import csv
+import os
 
 def load_latest_baseline() -> dict:
     """
@@ -19,21 +20,21 @@ def load_latest_baseline() -> dict:
     with open(latest_file, 'r') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            colour = row.get("colour", "").lower()
-            position = row.get("position", "").lower()
-            sensor = row["sensor"]
-            
+            colour = row.get("bulb_colour", "").lower()
+            position = row.get("bulb_position", "").lower()
+            sensor = row["sensor_position"]
+
             key = (colour, position)
             if key not in baseline_data:
                 baseline_data[key] = {}
-            
+
             channels = {
                 k: float(v) for k, v in row.items()
                 if k.startswith("channel_")
             }
             baseline_data[key][sensor] = channels
 
-    print(f"[INFO] Loaded baseline from: {latest_file}")
+    print(f"[INFO] Loaded baseline from: {os.path.basename(latest_file)}")
     return baseline_data
 
 

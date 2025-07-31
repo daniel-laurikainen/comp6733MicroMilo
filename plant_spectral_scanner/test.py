@@ -1,8 +1,9 @@
 import asyncio
 from pywizlight import wizlight, PilotBuilder
+import time
 
 async def toggle_bulb():
-    bulb = wizlight("192.168.119.238")  # Replace with your bulb's IP
+    bulb = wizlight("192.168.119.19")  # Replace with your bulb's IP
 
     colors = {
         "red": (255, 0, 0),
@@ -12,21 +13,21 @@ async def toggle_bulb():
     }
 
     for color_name, rgb in colors.items():
-        print(f"Turning bulb ON with {color_name}...")
-        # Set RGB color with full brightness (255)
-        await bulb.turn_on(PilotBuilder(rgb=rgb, brightness=255))
-        print(f"Bulb is {color_name}")
-        await asyncio.sleep(3)  # Wait 3 seconds
+        print(f"\n[INFO] Preparing to turn bulb ON with {color_name}...")
 
-        print("Turning bulb OFF...")
+        start_time = time.time()
+        await bulb.turn_on(PilotBuilder(rgb=rgb, brightness=255))
+        print(f"[COMMAND SENT] Bulb set to {color_name}.")
+        
+        input("Press ENTER when you see the light turn ON...")  # Wait for user
+
+        reaction_time = time.time() - start_time
+        print(f"[RESULT] Time from command to visual ON: {reaction_time:.3f} seconds")
+
+        await asyncio.sleep(1)
+        print("[INFO] Turning bulb OFF...")
         await bulb.turn_off()
-        await asyncio.sleep(1)  # Small delay before next color
+        await asyncio.sleep(1)
 
 if __name__ == "__main__":
     asyncio.run(toggle_bulb())
-
- 
-
-# bulb 1 192.168.119.60
-# bulb 2 192.168.119.238
-# bulb 3 192.168.119.176

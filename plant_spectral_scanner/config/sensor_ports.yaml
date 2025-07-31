@@ -1,5 +1,5 @@
 # config/sensor_ports.yaml
 
 close_sensor: /dev/cu.usbmodem11301 # White Tape - close usb position
-red_middle_sensor: /dev/cu.usbmodem112301 # Red Tape - middle usb position
+middle_sensor: /dev/cu.usbmodem112301 # Red Tape - middle usb position
 far_sensor: /dev/cu.usbmodem112201 # Black Tape - far usb position
