@@ -1,26 +1,26 @@
 import sklearn
-import torch
+# import torch
 import matplotlib
 import os
 import pandas as pd
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.utils import Bunch
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
+# from sklearn.ensemble import RandomForestRegressor
+# from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.tree import DecisionTreeRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 
-
+# data loader for MVP
 def load_leaf_reflectance_data(csv_path="leaf_reflectance_classification_data.csv"):
 
     # Load the CSV
@@ -49,6 +49,7 @@ def load_leaf_reflectance_data(csv_path="leaf_reflectance_classification_data.cs
         DESCR="Leaf reflectance classification dataset (Healthy, Dry, Over Watered)"
     )
 
+#data loader for Progress Report
 def load_leaf_data2(csv_path="leaf_reflectance_classification_data.csv"):
 
     # Load the CSV
@@ -80,7 +81,8 @@ def load_leaf_data2(csv_path="leaf_reflectance_classification_data.csv"):
         DESCR="Leaf reflectance binary classification dataset (Healthy vs Unhealthy)"
     )
 
-def load_data(folder_path="./data/scans"):
+#data loader for Final Report
+def load_data(folder_path="../plant_spectral_scanner/data/scans"):
     # Find all CSV files in the directory
     all_files = [
         os.path.join(folder_path, f)
@@ -121,7 +123,7 @@ def load_data(folder_path="./data/scans"):
         DESCR="Binary leaf reflectance classification dataset (Healthy vs Unhealthy)"
     )
 
-
+#comprehensive metrics: testing accuracy, precision, recall
 def print_classification_metrics(clf, X_train, y_train, X_test, y_test):
     y_train_pred = clf.predict(X_train)
     y_test_pred = clf.predict(X_test)
@@ -131,7 +133,7 @@ def print_classification_metrics(clf, X_train, y_train, X_test, y_test):
     print("- Confusion Matrix (Test):\n", confusion_matrix(y_test, y_test_pred))
     print("- Classification Report (Test):\n", classification_report(y_test, y_test_pred))
 
-
+#model tuning to find best parameter
 def tune_svc_classifier(X, y):
     print("Tuning SVC...")
     params = {
@@ -166,9 +168,15 @@ def tune_rf_classifier(X, y):
     print("Best RF parameters:", clf.best_params_)
     return clf
 
+#K-fold cross validation 
+def evaluate_with_kfold(model, X, y, k=5):
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X, y, cv=skf, scoring='accuracy')
+    print(f"K-Fold Accuracies ({k} folds):", np.round(scores, 3))
+    print("Mean Accuracy: {:.2f}".format(scores.mean()))
+    print("Std Deviation: {:.2f}".format(scores.std()))
 
-# data = load_leaf_reflectance_data()
-data = load_leaf_data2()
+data = load_data()
 
 X_train, X_test, y_train, y_test = train_test_split(
     data.data, data.target, test_size=0.2, random_state=42
@@ -180,9 +188,25 @@ clf_rf = tune_rf_classifier(X_train, y_train)
 
 print("\n--- SVC ---")
 print_classification_metrics(clf_svc, X_train, y_train, X_test, y_test)
+evaluate_with_kfold(clf_svc.best_estimator_, X_train, y_train)
 
 print("\n--- KNN ---")
 print_classification_metrics(clf_knn, X_train, y_train, X_test, y_test)
+evaluate_with_kfold(clf_knn.best_estimator_, X_train, y_train)
 
 print("\n--- Random Forest ---")
 print_classification_metrics(clf_rf, X_train, y_train, X_test, y_test)
+evaluate_with_kfold(clf_rf.best_estimator_, X_train, y_train)
+
+
+# Save the pre-trained KNN model 
+import pickle
+
+with open("knn_model.pkl", "wb") as f:
+    pickle.dump(clf_knn.best_estimator_, f)
+
+with open("knn_leaf_model.pkl", "rb") as f:
+    knn_model = pickle.load(f)
+
+# Usage of the saved model
+# pred = knn_model.predict(X_new_scaled)
