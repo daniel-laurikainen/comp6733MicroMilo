@@ -15,7 +15,7 @@ from typing import Dict
 wavelengths = [410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 890, 900, 940]
 
 class SensorController:
-    def __init__(self, config_path: str = 'config/sensor_ports.yaml'):
+    def __init__(self, config_path: str = 'plant_spectral_scanner/config/sensor_ports.yaml'):
         """
         Initializes sensor controller and loads sensor-port mapping
         """

@@ -3,7 +3,7 @@ from pywizlight import wizlight, PilotBuilder
 import time
 
 async def toggle_bulb():
-    bulb = wizlight("192.168.119.19")  # Replace with your bulb's IP
+    bulb = wizlight("192.168.117.19")  # Replace with your bulb's IP
 
     colors = {
         "red": (255, 0, 0),

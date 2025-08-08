@@ -4,7 +4,7 @@ from pywizlight import wizlight, PilotBuilder
 from typing import Dict
 
 class BulbController:
-    def __init__(self, config_path="config/bulbs.yaml"):
+    def __init__(self, config_path="plant_spectral_scanner/config/bulbs.yaml"):
         self.bulbs = {}  # type: Dict[str, wizlight]
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)

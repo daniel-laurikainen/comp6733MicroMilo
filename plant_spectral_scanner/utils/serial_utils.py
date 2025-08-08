@@ -11,7 +11,7 @@ import yaml
 import serial.tools.list_ports
 
 # Load YAML config
-def load_sensor_config(config_path="config/sensor_ports.yaml"):
+def load_sensor_config(config_path="plant_spectral_scanner/config/sensor_ports.yaml"):
     with open(config_path, "r") as file:
         return yaml.safe_load(file)
 

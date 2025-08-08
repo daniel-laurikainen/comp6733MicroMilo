@@ -8,15 +8,16 @@ Author: Daniel L.
 """
 
 import time
-from utils.sensor_controller import SensorController
-from utils.bulb_controller import BulbController
+from plant_spectral_scanner.utils.sensor_controller import SensorController
+from plant_spectral_scanner.utils.bulb_controller import BulbController
 
-from scripts.prompt_mode import prompt_mode
-from scripts.csv_utils import save_to_csv
-from scripts.baseline_utils import load_latest_baseline, subtract_baseline
+from plant_spectral_scanner.scripts.prompt_mode import prompt_mode
+from plant_spectral_scanner.scripts.csv_utils import save_to_csv
+from plant_spectral_scanner.scripts.baseline_utils import load_latest_baseline, subtract_baseline
+
 
 # === Global timing variables ===
-BULB_STABILIZE_TIME = 3.0     # seconds to wait after turning bulb on to stabilize
+BULB_STABILIZE_TIME = 1.50     # seconds to wait after turning bulb on to stabilize
 BULB_OFF_DELAY = 0.5          # seconds to wait after turning bulb off before next step
 MODE_START_DELAY = 1.0        # seconds to wait after starting mode before measurement
 

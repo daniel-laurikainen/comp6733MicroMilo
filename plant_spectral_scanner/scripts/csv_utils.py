@@ -25,7 +25,7 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
     wavelengths = [410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 890, 900, 940]
 
     # Get the base directory: parent of plant_spectral_scanner/
-    base_project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     folder_name = "scans" if mode == "scan" else "baseline"
     data_dir = os.path.join(base_project_dir, "data", folder_name)
