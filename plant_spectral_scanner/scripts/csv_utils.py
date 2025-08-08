@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = False,
-                colour: str = "", position: str = "", filename: str = "") -> str:
+                colour: str = "", position: str = "", filename: str = "", extra_subfolder: str = None) -> str:
     """
     Save sensor data to a CSV file. If filename is provided, appends to existing file.
 
@@ -28,6 +28,8 @@ def save_to_csv(data: dict, mode: str, description: str = "", adjusted: bool = F
     base_project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     folder_name = "scans" if mode == "scan" else "baseline"
+    if extra_subfolder:
+        folder_name = extra_subfolder
     data_dir = os.path.join(base_project_dir, "data", folder_name)
     os.makedirs(data_dir, exist_ok=True)
 
