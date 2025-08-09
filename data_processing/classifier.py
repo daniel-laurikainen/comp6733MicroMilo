@@ -1,7 +1,7 @@
 import sklearn
 # import torch
 import matplotlib
-import os
+import os, glob
 import pandas as pd
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
@@ -82,13 +82,30 @@ def load_leaf_data2(csv_path="leaf_reflectance_classification_data.csv"):
     )
 
 #data loader for Final Report
-def load_data(folder_path="../plant_spectral_scanner/data/scans"):
+def load_data(folder_path="../data/scans/basil_scans"):
     # Find all CSV files in the directory
+
     all_files = [
         os.path.join(folder_path, f)
         for f in os.listdir(folder_path)
         if f.endswith(".csv")
     ]
+
+    # if folder_path is None:
+    #     folder_path = [
+    #         "../data/scans/leaf_scans",
+    #         "../data/scans/basil_scans",
+    #         # add more if you want:
+    #         # "../data/scans/old_scans",
+    #     ]
+
+    # collect all CSVs from all folders (non-recursive)
+    # all_files = []
+    # for fp in folder_path:
+    #     all_files.extend(glob.glob(os.path.join(fp, "*.csv")))
+    
+    if not all_files:
+        raise FileNotFoundError(f"No CSV files found in: {folder_path}")
 
     # Load and combine all files
     df_list = [pd.read_csv(file) for file in all_files]
@@ -176,6 +193,59 @@ def evaluate_with_kfold(model, X, y, k=5):
     print("Mean Accuracy: {:.2f}".format(scores.mean()))
     print("Std Deviation: {:.2f}".format(scores.std()))
 
+def evaluate_model_cv_and_test(model, X_train, y_train, X_test, y_test, k=5, name="Model"):
+    """
+    Prints k-fold CV accuracy (on X_train/y_train) and test-set metrics for the same model.
+    Works with either a fitted estimator or a fitted GridSearchCV object.
+    Returns a dict of key metrics.
+    """
+    # Use the tuned estimator if GridSearchCV was used; otherwise use the model itself
+    est = model.best_estimator_ if hasattr(model, "best_estimator_") else model
+
+    # ----- Cross-validated accuracy on TRAIN split -----
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    cv_scores = cross_val_score(est, X_train, y_train, cv=skf, scoring='accuracy')
+    cv_mean, cv_std = cv_scores.mean(), cv_scores.std()
+
+    # ----- Test metrics on HOLD-OUT set -----
+    # (GridSearchCV.best_estimator_ is refit by default; if you passed a plain estimator, ensure it's fit)
+    # We'll be safe and fit on X_train if needed.
+    try:
+        _ = est.predict(X_train[:1])
+    except Exception:
+        est.fit(X_train, y_train)
+
+    y_train_pred = est.predict(X_train)
+    y_test_pred  = est.predict(X_test)
+
+    train_acc = accuracy_score(y_train, y_train_pred)
+    test_acc  = accuracy_score(y_test, y_test_pred)
+    cm        = confusion_matrix(y_test, y_test_pred)
+    report    = classification_report(y_test, y_test_pred)
+
+    # ----- Pretty print -----
+    print(f"\n=== {name} ===")
+    if hasattr(model, "best_params_"):
+        print("Best params:", model.best_params_)
+    print(f"K-Fold ({k}) CV Accuracies:", np.round(cv_scores, 3))
+    print(f"K-Fold Mean Accuracy: {cv_mean:.3f}  (± {cv_std:.3f})")
+    print(f"Train Accuracy: {train_acc:.3f}")
+    print(f"Test  Accuracy: {test_acc:.3f}")
+    print("Confusion Matrix (Test):\n", cm)
+    print("Classification Report (Test):\n", report)
+
+    return {
+        "name": name,
+        "best_params": getattr(model, "best_params_", None),
+        "cv_scores": cv_scores,
+        "cv_mean": cv_mean,
+        "cv_std": cv_std,
+        "train_acc": train_acc,
+        "test_acc": test_acc,
+        "confusion_matrix": cm,
+        "classification_report": report,
+    }
+
 data = load_data()
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -186,27 +256,32 @@ clf_svc = tune_svc_classifier(X_train, y_train)
 clf_knn = tune_knn_classifier(X_train, y_train)
 clf_rf = tune_rf_classifier(X_train, y_train)
 
-print("\n--- SVC ---")
-print_classification_metrics(clf_svc, X_train, y_train, X_test, y_test)
-evaluate_with_kfold(clf_svc.best_estimator_, X_train, y_train)
+# print("\n--- SVC ---")
+# print_classification_metrics(clf_svc, X_train, y_train, X_test, y_test)
+# evaluate_with_kfold(clf_svc, X_train, y_train)
 
-print("\n--- KNN ---")
-print_classification_metrics(clf_knn, X_train, y_train, X_test, y_test)
-evaluate_with_kfold(clf_knn.best_estimator_, X_train, y_train)
+# print("\n--- KNN ---")
+# print_classification_metrics(clf_knn, X_train, y_train, X_test, y_test)
+# evaluate_with_kfold(clf_knn, X_train, y_train)
 
-print("\n--- Random Forest ---")
-print_classification_metrics(clf_rf, X_train, y_train, X_test, y_test)
-evaluate_with_kfold(clf_rf.best_estimator_, X_train, y_train)
+# print("\n--- Random Forest ---")
+# print_classification_metrics(clf_rf, X_train, y_train, X_test, y_test)
+# evaluate_with_kfold(clf_rf, X_train, y_train)
 
+
+svc_metrics = evaluate_model_cv_and_test(clf_svc, X_train, y_train, X_test, y_test, k=5, name="SVC")
+knn_metrics = evaluate_model_cv_and_test(clf_knn, X_train, y_train, X_test, y_test, k=5, name="KNN")
+rf_metrics  = evaluate_model_cv_and_test(clf_rf,  X_train, y_train, X_test, y_test, k=5, name="Random Forest")
 
 # Save the pre-trained KNN model 
 import pickle
 
-with open("knn_model.pkl", "wb") as f:
-    pickle.dump(clf_knn.best_estimator_, f)
+# with open("RF_basil_model.pkl", "wb") as f:
+#     pickle.dump(clf_rf.best_estimator_, f)
 
-with open("knn_leaf_model.pkl", "rb") as f:
-    knn_model = pickle.load(f)
+### Usage of the saved model: ###
 
-# Usage of the saved model
+# with open("knn_leaf_model.pkl", "rb") as f:
+#     knn_model = pickle.load(f)
+
 # pred = knn_model.predict(X_new_scaled)
